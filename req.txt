@@ -1,0 +1,106 @@
+Bagus, pilihan menggunakan **AlmaLinux** sangat solid (ini adalah turunan RHEL/CentOS, sangat stabil untuk server).
+
+Karena kodingan yang saya berikan hanya menggunakan **PHP Native** dan **File JSON** (tanpa database MySQL), persyaratannya jadi lebih ringan.
+
+Berikut adalah langkah-langkah **requirement** dan **perintah instalasi** yang harus kamu jalankan di terminal VPS AlmaLinux kamu agar sistem ini berjalan:
+
+### 1\. Update Sistem & Install Apache (Web Server)
+
+Pertama, kita butuh web server untuk menampilkan website dan melayani API. Di AlmaLinux, kita pakai **Apache (httpd)**.
+
+```bash
+# Update repository
+sudo dnf update -y
+
+# Install Apache
+sudo dnf install httpd -y
+
+# Jalankan Apache dan buat dia otomatis nyala saat VPS restart
+sudo systemctl start httpd
+sudo systemctl enable httpd
+```
+
+### 2\. Install PHP
+
+Karena `api.php` dan `index.php` dibuat dengan PHP, kamu wajib menginstalnya. Script kita butuh ekstensi standar JSON.
+
+```bash
+# Install PHP dan modul yang umum
+sudo dnf install php php-cli php-common php-json php-mbstring -y
+
+# Restart Apache agar mendeteksi PHP
+sudo systemctl restart httpd
+```
+
+### 3\. Buka Firewall (PENTING)
+
+Secara default, AlmaLinux memblokir akses dari luar. Kamu harus membuka port 80 (HTTP) agar Arduino dan Browser bisa mengakses website kamu.
+
+```bash
+# Buka port HTTP (80) dan HTTPS (443)
+sudo firewall-cmd --permanent --add-service=http
+sudo firewall-cmd --permanent --add-service=https
+
+# Reload firewall untuk menerapkan perubahan
+sudo firewall-cmd --reload
+```
+
+-----
+
+### 4\. Upload File & Atur Permission (SANGAT PENTING)
+
+Ini adalah langkah dimana sering terjadi error **"Permission Denied"** atau data tidak tersimpan.
+
+1.  **Upload File:**
+    Masukkan file `api.php` dan `index.php` ke folder: `/var/www/html/`
+    (Bisa pakai FileZilla (SFTP) atau `nano` langsung di terminal).
+
+2.  **Atur Permission Folder:**
+    Karena `api.php` akan mencoba **membuat dan menulis** file baru bernama `iot_data.json` secara otomatis, Apache harus punya izin tulis di folder tersebut.
+
+    Jalankan perintah ini:
+
+    ```bash
+    # Ubah kepemilikan folder html ke user apache
+    sudo chown -R apache:apache /var/www/html
+
+    # Berikan izin tulis (Write) ke folder tersebut
+    sudo chmod -R 755 /var/www/html
+    ```
+
+3.  **Masalah SELinux (Khas AlmaLinux/CentOS):**
+    AlmaLinux memiliki keamanan ketat bernama SELinux. Seringkali walaupun `chmod` sudah benar, SELinux tetap memblokir PHP untuk menulis file.
+
+    **Solusi Cepat (Untuk Project/Belajar):** Ubah konteks folder agar boleh ditulis oleh httpd (Apache).
+
+    ```bash
+    # Izinkan Apache menulis di folder html secara rw (read-write)
+    sudo chcon -t httpd_sys_rw_content_t /var/www/html -R
+    ```
+
+    *Atau jika masih gagal, kamu bisa mematikan SELinux sementara (tidak disarankan untuk production, tapi oke untuk tugas kuliah):*
+
+    ```bash
+    sudo setenforce 0
+    ```
+
+### 5\. Cek IP VPS
+
+Cek berapa IP public VPS kamu untuk dimasukkan ke kodingan Arduino (`serverName`).
+
+```bash
+curl ifconfig.me
+```
+
+-----
+
+### Rangkuman Checklist:
+
+1.  [ ] Apache Installed & Running (`systemctl status httpd` harus hijau/active).
+2.  [ ] PHP Installed (`php -v` muncul versi PHP).
+3.  [ ] Firewall Port 80 Open.
+4.  [ ] File `api.php` & `index.php` ada di `/var/www/html`.
+5.  [ ] Permission folder `/var/www/html` milik user `apache` (`chown apache:apache`).
+6.  [ ] SELinux sudah diizinkan menulis file.
+
+Jika semua sudah dicentang, sistem IoT kamu siap beroperasi\!
