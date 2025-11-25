@@ -4,19 +4,19 @@
 #include <DHT.h>
 
 // --- KREDENSIAL WIFI ---
-const char* ssid = "NAMA_WIFI_KAMU";
-const char* password = "PASSWORD_WIFI_KAMU";
+const char* ssid = "Gembong Center";
+const char* password = "Pawpatrol#321";
 
 // --- KONFIGURASI SERVER ---
 // Ganti dengan IP VPS atau Domain kamu
 // Contoh: "http://192.168.1.10/api.php" atau "http://rakhaproject.com/api.php"
-const char* serverName = "http://IP_ATAU_DOMAIN_KAMU/api.php";
+const char* serverName = "http://47.237.15.145//api.php";
 
 // --- Definisi Pin ---
-const int RELAY_PIN = 19;     // GPIO 19 Relai/Fan
-const int DHT_PIN = 23;       // GPIO 23 DHT11
-const int MQ6_DO_PIN = 18;    // GPIO 18 MQ-6 Digital
-const int MQ6_AO_PIN = 2;     // GPIO 2 MQ-6 Analog
+const int RELAY_PIN = 19;     // GPIO Relai/Fan
+const int DHT_PIN = 23;       // GPIO  DHT11
+const int MQ6_DO_PIN = 18;    // GPIO  MQ-6 Digital
+const int MQ6_AO_PIN = 34;     //
 
 // --- Konfigurasi Sensor ---
 #define DHTTYPE DHT11

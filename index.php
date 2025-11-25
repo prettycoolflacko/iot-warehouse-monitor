@@ -29,6 +29,9 @@
         ::-webkit-scrollbar-track { background: #161B22; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+        /* Kelas untuk input disabled agar terlihat jelas mati */
+        input:disabled { opacity: 0.5; cursor: not-allowed; background-color: #374151; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
     </style>
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -57,12 +60,15 @@
             
             <section id="dashboard" class="space-y-8">
                 <div class="flex justify-between items-end">
-                    <h2 class="text-3xl font-semibold text-gray-200">Monitor Real-Time</h2>
+                    <div>
+                        <h2 class="text-3xl font-semibold text-gray-200">Monitor Real-Time</h2>
+                        <p id="mode-badge-dash" class="text-xs font-bold mt-1 text-accent-blue tracking-wide">MODE: LOADING...</p>
+                    </div>
                     <span id="last-update" class="text-xs text-gray-500 font-mono">Syncing...</span>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300">
                         <div class="flex items-center justify-between">
                             <i data-lucide="thermometer" class="w-10 h-10 text-red-400"></i>
                             <span class="text-sm font-medium text-gray-400">Suhu Udara</span>
@@ -71,7 +77,7 @@
                         <p class="text-sm text-gray-400 mt-1">Target Max: <span id="disp-max-temp">--</span>°C</p>
                     </div>
 
-                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300">
                         <div class="flex items-center justify-between">
                             <i data-lucide="droplets" class="w-10 h-10 text-blue-400"></i>
                             <span class="text-sm font-medium text-gray-400">Kelembaban</span>
@@ -80,23 +86,26 @@
                         <p class="text-sm text-gray-400 mt-1">Status: Normal</p>
                     </div>
 
-                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300 transform hover:scale-[1.01]">
+                    <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50 hover:border-accent-blue/70 transition duration-300">
                         <div class="flex items-center justify-between">
                             <i data-lucide="cloud-lightning" class="w-10 h-10 text-yellow-400"></i>
                             <span class="text-sm font-medium text-gray-400">Level Gas</span>
                         </div>
                         <p class="text-5xl font-extrabold mt-3 text-white"><span id="gas-value">--</span> PPM</p>
-                        <p class="text-sm text-gray-400 mt-1" id="gas-status">Amoniak/Asap</p>
+                        <p class="text-sm text-gray-400 mt-1" id="gas-status">--</p>
                     </div>
                 </div>
 
                 <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-accent-blue/70">
                     <h3 class="text-xl font-semibold mb-4 flex items-center text-accent-light">
                         <i data-lucide="fan" class="w-5 h-5 mr-2"></i>
-                        Kontrol Ventilasi DC Fan
+                        Kontrol Ventilasi (Fan)
                     </h3>
                     <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-                        <p class="text-lg text-gray-300">Status Fan Saat Ini:</p>
+                        <div>
+                            <p class="text-lg text-gray-300">Status Fan Saat Ini:</p>
+                            <p id="fan-control-msg" class="text-xs text-gray-500 mt-1">--</p>
+                        </div>
                         <div class="flex items-center space-x-4">
                             <span id="fan-status-text" class="px-3 py-1 rounded-full text-sm font-bold bg-gray-600 text-white">LOADING...</span>
                             <button id="fan-toggle-btn" onclick="toggleFan()" disabled class="px-6 py-2 rounded-full font-bold transition duration-300 shadow-lg bg-gray-600 text-white cursor-not-allowed">
@@ -104,53 +113,52 @@
                             </button>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-4">Fan dikontrol melalui API VPS.</p>
                 </div>
                 
                 <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50">
                     <h3 class="text-xl font-semibold mb-4 text-gray-200">Log Sistem Live</h3>
-                    <ul id="log-list" class="space-y-2 text-sm text-gray-400">
-                        <li class="flex justify-between items-center">
-                            <span><span class="text-accent-light">System</span> - Menunggu data server...</span>
-                            <span class="text-yellow-400">WAIT</span>
-                        </li>
-                    </ul>
+                    <ul id="log-list" class="space-y-2 text-sm text-gray-400"></ul>
                 </div>
             </section>
 
             <section id="settings" class="space-y-6 hidden">
-                <h2 class="text-3xl font-semibold text-gray-200 mb-4">Pengaturan Sistem (VPS)</h2>
+                <h2 class="text-3xl font-semibold text-gray-200 mb-4">Pengaturan Sistem</h2>
 
                 <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50">
-                    <h3 class="text-xl font-semibold mb-4 text-accent-light">Perangkat Keras & Koneksi</h3>
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center py-2 border-b border-gray-700/50">
-                            <label class="text-gray-300">Status Koneksi API</label>
-                            <span id="api-status" class="px-3 py-1 rounded-full text-sm font-bold bg-green-600 text-white">ONLINE</span>
-                        </div>
-                        <div class="flex justify-between items-center py-2 border-b border-gray-700/50">
-                            <label class="text-gray-300">Device ID</label>
-                            <span class="text-gray-400 font-mono">ESP32-NODE-01</span>
-                        </div>
+                    <h3 class="text-xl font-semibold mb-4 text-accent-light">Mode Operasi</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <button onclick="setMode('AUTO')" id="btn-mode-auto" class="p-4 rounded-lg border border-gray-600 text-center hover:bg-gray-700 transition">
+                            <i data-lucide="cpu" class="w-8 h-8 mx-auto mb-2 text-blue-400"></i>
+                            <div class="font-bold">OTOMATIS</div>
+                            <div class="text-xs text-gray-400 mt-1">Fan dikontrol sensor. Setting Aktif.</div>
+                        </button>
+                        
+                        <button onclick="setMode('MANUAL')" id="btn-mode-manual" class="p-4 rounded-lg border border-gray-600 text-center hover:bg-gray-700 transition">
+                            <i data-lucide="hand" class="w-8 h-8 mx-auto mb-2 text-green-400"></i>
+                            <div class="font-bold">MANUAL</div>
+                            <div class="text-xs text-gray-400 mt-1">Fan dikontrol user. Setting Terkunci.</div>
+                        </button>
                     </div>
                 </div>
 
                 <div class="bg-card-bg p-6 rounded-xl shadow-2xl border border-gray-700/50">
-                    <h3 class="text-xl font-semibold mb-4 text-accent-light">Konfigurasi Ambang Batas</h3>
+                    <h3 class="text-xl font-semibold mb-4 text-accent-light">Konfigurasi Ambang Batas (Auto)</h3>
+                    <p id="setting-lock-msg" class="text-xs text-red-400 mb-4 hidden">⚠️ Mode MANUAL aktif. Ubah ke OTOMATIS untuk mengedit pengaturan ini.</p>
+                    
                     <div class="space-y-4">
                         <div class="flex justify-between items-center py-2 border-b border-gray-700/50">
-                            <label for="temp-threshold" class="text-gray-300">Suhu Maksimum (°C)</label>
-                            <input id="temp-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white">
+                            <label class="text-gray-300">Suhu Maksimum (°C)</label>
+                            <input id="temp-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white transition-colors">
                         </div>
                         <div class="flex justify-between items-center py-2 border-b border-gray-700/50">
-                            <label for="humid-threshold" class="text-gray-300">Kelembaban Maksimum (%)</label>
-                            <input id="humid-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white">
+                            <label class="text-gray-300">Kelembaban Maksimum (%)</label>
+                            <input id="humid-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white transition-colors">
                         </div>
                         <div class="flex justify-between items-center pt-2">
-                            <label for="gas-threshold" class="text-gray-300">Gas Limit (PPM)</label>
-                            <input id="gas-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white">
+                            <label class="text-gray-300">Gas Limit (PPM)</label>
+                            <input id="gas-threshold" type="number" class="bg-gray-800 border border-gray-700 rounded-lg p-2 w-24 text-right focus:ring-accent-blue focus:border-accent-blue text-white transition-colors">
                         </div>
-                        <button onclick="saveSettings()" class="w-full mt-4 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 transition duration-200 transform active:scale-95">
+                        <button id="btn-save-settings" onclick="saveSettings()" class="w-full mt-4 py-3 bg-green-600 rounded-lg text-white font-semibold hover:bg-green-700 transition duration-200">
                             Simpan ke Server
                         </button>
                     </div>
@@ -165,40 +173,32 @@
 
     <script>
         lucide.createIcons();
-        
-        // Konfigurasi API
         const API_URL = 'api.php'; 
         
-        // State Variables
-        let isSettingsLoaded = false; // Agar input tidak tertimpa saat user mengetik
-        let currentFanStatus = false;
+        let isSettingsLoaded = false;
+        let currentSystemMode = "AUTO";
 
-        // --- 1. Tab Switching Logic ---
         function switchTab(tabId) {
             const tabs = ['dashboard', 'settings'];
             tabs.forEach(id => {
-                const section = document.getElementById(id);
-                const button = document.getElementById('tab-' + id);
-                if (id === tabId) {
-                    section.classList.remove('hidden');
-                    button.classList.add('border-accent-blue', 'text-white');
-                    button.classList.remove('border-transparent', 'text-gray-400');
+                document.getElementById(id).classList.toggle('hidden', id !== tabId);
+                const btn = document.getElementById('tab-' + id);
+                if(id === tabId) {
+                    btn.classList.add('border-accent-blue', 'text-white');
+                    btn.classList.remove('border-transparent', 'text-gray-400');
                 } else {
-                    section.classList.add('hidden');
-                    button.classList.remove('border-accent-blue', 'text-white');
-                    button.classList.add('border-transparent', 'text-gray-400');
+                    btn.classList.remove('border-accent-blue', 'text-white');
+                    btn.classList.add('border-transparent', 'text-gray-400');
                 }
             });
         }
 
-        // --- 2. Fetch Data dari API (Interval) ---
         async function fetchData() {
             try {
-                const response = await fetch(API_URL + '?t=' + new Date().getTime()); // Anti-cache
-                if (!response.ok) throw new Error('Network response was not ok');
+                const response = await fetch(API_URL + '?t=' + new Date().getTime());
                 const data = await response.json();
 
-                // A. Update Dashboard UI
+                // 1. Update Data Sensor
                 document.getElementById('temp-value').textContent = parseFloat(data.temperature).toFixed(1);
                 document.getElementById('humid-value').textContent = data.humidity;
                 document.getElementById('gas-value').textContent = data.gas_level;
@@ -206,10 +206,14 @@
                 document.getElementById('last-update').textContent = "Last sync: " + data.last_update.split(' ')[1];
                 document.getElementById('disp-max-temp').textContent = data.settings.max_temp;
 
-                // B. Update Fan UI
-                updateFanUI(data.fan_status);
+                // 2. Handle System Mode UI
+                currentSystemMode = data.system_mode || "AUTO";
+                updateModeUI(currentSystemMode);
 
-                // C. Update Settings Input (Hanya sekali saat pertama load agar tidak mengganggu user ngetik)
+                // 3. Update Fan UI
+                updateFanUI(data.fan_status, currentSystemMode);
+
+                // 4. Isi Form Settings (Sekali saja saat awal/reload)
                 if (!isSettingsLoaded && data.settings) {
                     document.getElementById('temp-threshold').value = data.settings.max_temp;
                     document.getElementById('humid-threshold').value = data.settings.max_humid;
@@ -217,63 +221,127 @@
                     isSettingsLoaded = true; 
                 }
 
-                document.getElementById('api-status').textContent = "ONLINE";
-                document.getElementById('api-status').classList.replace('bg-red-600', 'bg-green-600');
-
             } catch (error) {
                 console.error("Fetch Error:", error);
-                document.getElementById('api-status').textContent = "OFFLINE";
-                document.getElementById('api-status').classList.replace('bg-green-600', 'bg-red-600');
             }
         }
 
-        // --- 3. Fan Control Logic ---
-        function updateFanUI(status) {
-            currentFanStatus = status;
+        // --- UI LOGIC UNTUK MODE (PENTING) ---
+        function updateModeUI(mode) {
+            const btnAuto = document.getElementById('btn-mode-auto');
+            const btnManual = document.getElementById('btn-mode-manual');
+            const badge = document.getElementById('mode-badge-dash');
+            
+            // Elemen yang akan dilock/unlock
+            const inputTemp = document.getElementById('temp-threshold');
+            const inputHumid = document.getElementById('humid-threshold');
+            const inputGas = document.getElementById('gas-threshold');
+            const btnSave = document.getElementById('btn-save-settings');
+            const lockMsg = document.getElementById('setting-lock-msg');
+
+            if (mode === 'AUTO') {
+                // Style Tombol Mode
+                btnAuto.className = "p-4 rounded-lg border-2 border-accent-blue bg-accent-blue/10 text-center cursor-default";
+                btnManual.className = "p-4 rounded-lg border border-gray-600 text-center hover:bg-gray-700 transition cursor-pointer";
+                badge.textContent = "MODE: OTOMATIS (SENSOR)";
+                badge.className = "text-xs font-bold mt-1 text-blue-400 tracking-wide";
+
+                // UNLOCK SETTINGS
+                inputTemp.disabled = false;
+                inputHumid.disabled = false;
+                inputGas.disabled = false;
+                btnSave.disabled = false;
+                btnSave.classList.replace('bg-gray-600', 'bg-green-600');
+                lockMsg.classList.add('hidden');
+
+            } else { // MANUAL
+                // Style Tombol Mode
+                btnAuto.className = "p-4 rounded-lg border border-gray-600 text-center hover:bg-gray-700 transition cursor-pointer";
+                btnManual.className = "p-4 rounded-lg border-2 border-green-500 bg-green-500/10 text-center cursor-default";
+                badge.textContent = "MODE: MANUAL (USER)";
+                badge.className = "text-xs font-bold mt-1 text-green-400 tracking-wide";
+
+                // LOCK SETTINGS (SESUAI REQUEST)
+                inputTemp.disabled = true;
+                inputHumid.disabled = true;
+                inputGas.disabled = true;
+                btnSave.disabled = true;
+                btnSave.classList.replace('bg-green-600', 'bg-gray-600'); // Jadi abu-abu
+                lockMsg.classList.remove('hidden');
+            }
+        }
+
+        function updateFanUI(status, mode) {
             const btn = document.getElementById('fan-toggle-btn');
             const statusText = document.getElementById('fan-status-text');
+            const msg = document.getElementById('fan-control-msg');
 
-            btn.disabled = false;
-            btn.classList.remove('cursor-not-allowed', 'bg-gray-600');
-
+            // Text Status
             if (status) {
-                statusText.textContent = "AKTIF";
+                statusText.textContent = "ON";
                 statusText.className = "px-3 py-1 rounded-full text-sm font-bold bg-green-600 text-white";
                 btn.textContent = "Matikan Fan";
                 btn.className = "px-6 py-2 rounded-full font-bold transition duration-300 shadow-lg bg-red-600 hover:bg-red-700 text-white transform hover:scale-105";
             } else {
-                statusText.textContent = "MATI";
+                statusText.textContent = "OFF";
                 statusText.className = "px-3 py-1 rounded-full text-sm font-bold bg-red-600 text-white";
                 btn.textContent = "Nyalakan Fan";
                 btn.className = "px-6 py-2 rounded-full font-bold transition duration-300 shadow-lg bg-green-600 hover:bg-green-700 text-white transform hover:scale-105";
             }
+
+            // LOGIKA DISABLE TOMBOL FAN
+            if (mode === 'AUTO') {
+                btn.disabled = true; // Di Auto, user tidak boleh tekan
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('hover:scale-105');
+                msg.textContent = "Dikontrol Sistem Otomatis";
+            } else {
+                btn.disabled = false; // Di Manual, user BOLEH tekan
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('hover:scale-105');
+                msg.textContent = "Kontrol Manual Aktif";
+            }
+        }
+
+        // --- ACTIONS ---
+        async function setMode(newMode) {
+            if(newMode === currentSystemMode) return; // Klik tombol yg sama
+
+            addLog("Mengubah Mode ke " + newMode + "...", "INFO");
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'set_mode', mode: newMode })
+                });
+                fetchData(); // Refresh UI segera
+            } catch (e) { console.error(e); }
         }
 
         async function toggleFan() {
-            addLog("Mengirim perintah Fan...", "INFO");
+            if(currentSystemMode === 'AUTO') {
+                alert("Ubah ke Mode Manual dulu di Pengaturan!");
+                return;
+            }
+            // Logic sama seperti sebelumnya
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'toggle_fan' })
                 });
-                // Fetch segera untuk update UI
                 fetchData();
-                addLog("Status Fan berhasil diubah.", "SUCCESS");
-            } catch (error) {
-                addLog("Gagal mengubah fan.", "ERROR");
-            }
+            } catch (e) { console.error(e); }
         }
 
-        // --- 4. Settings Logic ---
         async function saveSettings() {
+            if(currentSystemMode === 'MANUAL') return; // Double protection
+
             const maxTemp = document.getElementById('temp-threshold').value;
             const maxHumid = document.getElementById('humid-threshold').value;
             const gasLim = document.getElementById('gas-threshold').value;
 
-            addLog("Menyimpan pengaturan...", "INFO");
-            showNotification("Menyimpan ke Server...");
-
+            addLog("Menyimpan Config...", "INFO");
             try {
                 await fetch(API_URL, {
                     method: 'POST',
@@ -285,56 +353,26 @@
                         gas_limit: gasLim
                     })
                 });
-                
-                showNotification("Pengaturan Tersimpan!");
-                addLog("Pengaturan ambang batas diperbarui.", "SUCCESS");
-                
-                // Refresh data untuk memastikan sinkron
-                isSettingsLoaded = false; // Force reload settings text
+                addLog("Config Tersimpan!", "SUCCESS");
+                isSettingsLoaded = false;
                 fetchData();
-            } catch (error) {
-                showNotification("Gagal Menyimpan!");
-                addLog("Gagal menyimpan pengaturan.", "ERROR");
-            }
-        }
-
-        // --- 5. Utilities (Log & Notif) ---
-        function showNotification(message) {
-            let notification = document.createElement('div');
-            notification.className = 'fixed bottom-4 right-4 bg-accent-blue text-white p-4 rounded-lg shadow-xl z-50 transition-opacity duration-300';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.style.opacity = '0';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            } catch (e) { addLog("Gagal Simpan", "ERROR"); }
         }
 
         function addLog(msg, type) {
             const list = document.getElementById('log-list');
             const li = document.createElement('li');
-            li.className = "flex justify-between items-center animate-pulse"; // Animasi kecil saat masuk
-            
-            let color = "text-gray-400";
-            if(type === "SUCCESS") color = "text-green-400";
-            if(type === "ERROR") color = "text-red-400";
-            if(type === "INFO") color = "text-yellow-400";
-
-            const time = new Date().toLocaleTimeString();
-            li.innerHTML = `<span><span class="text-accent-light">${time}</span> - ${msg}</span><span class="${color}">${type}</span>`;
-            
-            // Limit log items
+            let color = type === "SUCCESS" ? "text-green-400" : (type === "ERROR" ? "text-red-400" : "text-yellow-400");
+            li.innerHTML = `<span><span class="text-accent-light">${new Date().toLocaleTimeString()}</span> - ${msg}</span><span class="${color}">${type}</span>`;
+            li.className = "flex justify-between items-center";
             list.prepend(li);
             if (list.children.length > 5) list.removeChild(list.lastChild);
-            
-            setTimeout(() => li.classList.remove('animate-pulse'), 1000);
         }
 
-        // Start App
         document.addEventListener('DOMContentLoaded', () => {
             switchTab('dashboard');
             fetchData();
-            setInterval(fetchData, 2000); // Auto refresh tiap 2 detik
+            setInterval(fetchData, 2000);
         });
     </script>
 </body>
